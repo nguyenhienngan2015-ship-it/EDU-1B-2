@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>EDU 1</title>
+
+<style>
+body{font-family:Arial;background:#eef3ff;padding:20px}
+.box{background:#fff;padding:15px;border-radius:10px;margin-bottom:20px}
+button{padding:10px;background:#3498db;color:#fff;border:none;border-radius:6px;cursor:pointer}
+button:hover{background:#2980b9}
+.hidden{display:none}
+#timer{color:red;font-weight:bold;font-size:20px}
+.q{margin:12px 0}
+table{border-collapse:collapse;width:100%}
+th,td{border:1px solid #ccc;padding:6px;text-align:center}
+</style>
+
+</head>
+
+<body>
+
+<h1>📘 EDU 1</h1>
+<h2>👩‍🏫 Giáo viên: Phạm Thị Ngần</h2>
+
+<!-- LOGIN -->
+<div class="box" id="loginBox">
+
+<select id="studentName">
+<option value="">-- Chọn học sinh --</option>
+<option>Nguyễn Yến</option>
+<option>Ninh Yến</option>
+<option>Ngọc</option>
+<option>Bảo</option>
+<option>Hân</option>
+<option>Khánh</option>
+<option>Tuấn</option>
+<option>Bảo An</option>
+<option>Bảo Ngọc</option>
+<option>Long</option>
+<option>Hằng</option>
+<option>Tùng</option>
+</select>
+
+<br><br>
+
+<button onclick="startTest()">▶️ Vào làm bài</button>
+<button onclick="showTeacher()">👩‍🏫 Giáo viên</button>
+
+</div>
+
+<!-- TEST -->
+<div class="box hidden" id="testBox">
+
+⏱ Thời gian còn lại: <span id="timer">30:00</span>
+
+<div id="quiz"></div>
+
+<button onclick="submitTest()">📤 Nộp bài</button>
+
+</div>
+
+<!-- RESULT -->
+<div class="box hidden" id="resultBox">
+
+<h2 id="result"></h2>
+
+<button onclick="location.reload()">🔁 Về trang đầu</button>
+
+</div>
+
+<!-- TEACHER -->
+<div class="box hidden" id="teacherBox">
+
+<h2>📊 BẢNG ĐIỂM</h2>
+
+<table>
+<thead>
+<tr>
+<th>STT</th>
+<th>Học sinh</th>
+<th>Điểm</th>
+<th>Thời gian</th>
+</tr>
+</thead>
+
+<tbody id="scoreTable"></tbody>
+
+</table>
+
+<br>
+
+<button onclick="backHome()">⬅️ Quay lại</button>
+
+</div>
+
+<script>
+
+let time=1800,timer,currentStudent="";
+
+const quizData=[
+
+{q:"Tính: 4 + 3 =",a:["6","7","8","5"],d:1},
+{q:"Tính: 9 - 2 =",a:["6","7","8","5"],d:1},
+{q:"Số liền sau của 8 là:",a:["7","8","9","10"],d:2},
+{q:"Số liền trước của 10 là:",a:["9","8","7","10"],d:0},
+{q:"Tính: 6 + 2 =",a:["7","8","9","6"],d:1},
+{q:"Tính: 7 - 3 =",a:["3","4","5","6"],d:1},
+{q:"Tính: 5 + 4 =",a:["8","9","7","6"],d:1},
+{q:"Tính: 8 - 4 =",a:["3","4","5","6"],d:1},
+{q:"Số nào lớn hơn?",a:["7 và 5","3 và 8","9 và 6","4 và 2"],d:2},
+{q:"Số tròn chục là:",a:["10","12","13","14"],d:0},
+
+{q:"Tính: 3 + 5 =",a:["7","8","9","6"],d:1},
+{q:"Tính: 10 - 5 =",a:["4","5","6","7"],d:1},
+{q:"Tính: 2 + 6 =",a:["7","8","9","6"],d:1},
+{q:"Tính: 9 - 6 =",a:["2","3","4","5"],d:1},
+{q:"Số liền sau của 14 là:",a:["13","14","15","16"],d:2},
+
+{q:"Tính: 7 + 1 =",a:["7","8","9","6"],d:1},
+{q:"Tính: 6 - 2 =",a:["3","4","5","6"],d:1},
+{q:"Tính: 8 + 1 =",a:["8","9","10","7"],d:1},
+{q:"Tính: 10 - 4 =",a:["5","6","7","8"],d:1},
+{q:"Số liền trước của 15 là:",a:["13","14","15","16"],d:1},
+
+{q:"Lan có 7 cái kẹo, cho bạn 2 cái. Còn lại:",a:["4","5","6","3"],d:1},
+{q:"Nam có 5 quả bóng, được cho thêm 3 quả. Có tất cả:",a:["7","8","9","6"],d:1},
+{q:"Tính: 4 + 4 =",a:["7","8","9","6"],d:1},
+{q:"Tính: 9 - 3 =",a:["5","6","7","4"],d:1},
+{q:"Tính: 6 + 3 =",a:["8","9","7","6"],d:1},
+
+{q:"Tính: 10 - 2 =",a:["7","8","9","6"],d:1},
+{q:"Tính: 3 + 4 =",a:["6","7","8","5"],d:1},
+{q:"Tính: 8 - 1 =",a:["6","7","8","5"],d:1},
+{q:"Tính: 5 + 3 =",a:["7","8","9","6"],d:1},
+{q:"Tính: 7 - 2 =",a:["4","5","6","3"],d:1}
+
+];
+
+const quiz=document.getElementById("quiz");
+
+quizData.forEach((q,i)=>{
+let html=`<div class="q"><b>Câu ${i+1}:</b> ${q.q}<br>`;
+q.a.forEach((ans,j)=>{
+html+=`<label><input type="radio" name="q${i}" value="${j}"> ${ans}</label><br>`;
+});
+html+="</div>";
+quiz.innerHTML+=html;
+});
+
+function startTest(){
+
+let name=studentName.value;
+
+if(!name){
+alert("Chọn học sinh!");
+return;
+}
+
+currentStudent=name;
+
+loginBox.classList.add("hidden");
+testBox.classList.remove("hidden");
+
+timer=setInterval(()=>{
+
+let m=Math.floor(time/60),
+s=time%60;
+
+timerSpan.innerText=m+":"+(s<10?"0":"")+s;
+
+time--;
+
+if(time<0)submitTest();
+
+},1000);
+
+}
+
+function submitTest(){
+
+clearInterval(timer);
+
+let score=0;
+
+quizData.forEach((q,i)=>{
+
+let c=document.querySelector(`input[name="q${i}"]:checked`);
+
+if(c && Number(c.value)===q.d)score++;
+
+});
+
+let data=JSON.parse(localStorage.getItem("scores")||"[]");
+
+data.push({
+name:currentStudent,
+score:score+"/30",
+time:new Date().toLocaleTimeString()
+});
+
+localStorage.setItem("scores",JSON.stringify(data));
+
+testBox.classList.add("hidden");
+resultBox.classList.remove("hidden");
+
+result.innerText="🎉 "+currentStudent+" đạt "+score+"/30 điểm";
+
+}
+
+function showTeacher(){
+
+loginBox.classList.add("hidden");
+teacherBox.classList.remove("hidden");
+
+let data=JSON.parse(localStorage.getItem("scores")||"[]");
+
+scoreTable.innerHTML=data.map((r,i)=>
+`<tr>
+<td>${i+1}</td>
+<td>${r.name}</td>
+<td>${r.score}</td>
+<td>${r.time}</td>
+</tr>`
+).join("");
+
+}
+
+function backHome(){
+teacherBox.classList.add("hidden");
+loginBox.classList.remove("hidden");
+}
+
+const timerSpan=document.getElementById("timer");
+
+</script>
+
+</body>
+</html>
